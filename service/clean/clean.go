@@ -47,12 +47,11 @@ func Dist() {
 		// 多个消费者
 		for i := 0; i < 100; i++ {
 			go func() {
-				defer wgReceivers.Done()
-
 				for path := range waitCh {
 					logrus.Infoln("remove dist", path)
 					file.DistFile.RemoveFile(path)
 					redis.RemoveFile(redis.Dist, path)
+					wgReceivers.Done()
 				}
 			}()
 		}
