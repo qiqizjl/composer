@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/binary"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
 
+// decode 返回包 from aliyun/packagist-mirrors
 func Decode(data []byte) ([]byte, error) {
 	if isGzip(data) {
 		return parseGzip(data)
@@ -23,7 +23,6 @@ func isGzip(data []byte) bool {
 }
 
 func parseGzip(data []byte) ([]byte, error) {
-	fmt.Print("test")
 	b := new(bytes.Buffer)
 	_ = binary.Write(b, binary.LittleEndian, data)
 	r, err := gzip.NewReader(b)
