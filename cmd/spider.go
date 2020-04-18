@@ -26,8 +26,7 @@ import (
 // spiderCmd represents the spider command
 var spiderCmd = &cobra.Command{
 	Use:   "spider",
-	Short: "Packagist Spider",
-	Long:  `抓取数据`,
+	Short: "抓取Composer数据",
 	Run: func(cmd *cobra.Command, args []string) {
 		runSpider()
 	},
@@ -49,7 +48,7 @@ func runSpider() {
 	for i := 0; i < 50; i++ {
 		go queue.Dist(i)
 	}
-	// 死循环等待
+	// 启动debug服务
 	http.ListenAndServe("0.0.0.0:8080", nil)
 
 }

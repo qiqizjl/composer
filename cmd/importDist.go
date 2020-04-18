@@ -7,8 +7,7 @@ import (
 
 var importDist = &cobra.Command{
 	Use:   "import:dist",
-	Short: "Import Dist",
-	Long:  `导入dist数据`,
+	Short: "将dist云存储中的文件数据导入redis",
 	Run: func(cmd *cobra.Command, args []string) {
 		runImportDist(cmd.Flag("nextPage").Value.String())
 	},

@@ -23,8 +23,7 @@ import (
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
 	Use:   "clean:metadata",
-	Short: "Clean MetaData",
-	Long:  `清理MetaData`,
+	Short: "定时清理已经无用的Metadata",
 	Run: func(cmd *cobra.Command, args []string) {
 		runCleanMetadata()
 	},

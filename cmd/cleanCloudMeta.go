@@ -8,8 +8,7 @@ import (
 // cleanCmd represents the clean command
 var cleanCloudMetaCmd = &cobra.Command{
 	Use:   "clean:cloud:metadata",
-	Short: "",
-	Long:  `清理远程存在本地却不存在的文件`,
+	Short: "清理远程存在本地却不存在的文件",
 	Run: func(cmd *cobra.Command, args []string) {
 		runCleanCloudMeta()
 	},

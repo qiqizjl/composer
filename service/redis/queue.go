@@ -10,7 +10,6 @@ import (
 const (
 	PackageHashFileKey = "mirror:packageHashFile"
 	ProviderKey        = "mirror:providers"
-	Package            = "mirror:package"
 	Dist               = "mirror:dist"
 )
 
