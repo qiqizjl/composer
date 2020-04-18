@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func Provider(processName string, path string) {
@@ -18,6 +16,7 @@ func Provider(processName string, path string) {
 	if redis.IsSucceed(redis.ProviderKey, path) {
 		logrus.Println(processName, "file local exist:", path)
 		redis.UpdateTime(redis.ProviderKey, path)
+
 		return
 	}
 	//if file.MetaFile.IsFile(path) {
@@ -53,14 +52,9 @@ func Provider(processName string, path string) {
 		return
 	}
 
-	localFile := "./tmp/metadata/" + path
-	paths, _ := filepath.Split(localFile)
-
-	os.MkdirAll(paths, 0755)
-	//写入本地文件
-	err = ioutil.WriteFile(localFile, content, 0644)
+	err = utils.StoreMetadata(path, content)
 	if err != nil {
-		logrus.Errorln(processName, path, "write local file  error:", err.Error())
+		logrus.Infoln("store ", path, " error ", err.Error())
 	}
 
 	redis.UploadSuccess(redis.ProviderKey, path)

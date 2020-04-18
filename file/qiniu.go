@@ -107,7 +107,7 @@ func (q *qiniu) ListFile(page string, pageSize int) (chan *ListItem, error) {
 			case retCh <- item:
 			}
 		}
-		return
+		close(retCh)
 	}()
 
 	return retCh, nil

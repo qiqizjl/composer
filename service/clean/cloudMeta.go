@@ -24,7 +24,7 @@ func CloudMeta() {
 			key = redis.ProviderKey
 		}
 		if !redis.IsSucceed(key, item.Key) {
-			file.MetaFile.RemoveFile(item.Key)
+			cleanFile(item.Key)
 			fmt.Println("clean remote", item.Key)
 		}
 

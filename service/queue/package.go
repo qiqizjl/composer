@@ -50,7 +50,6 @@ func Package(num int) {
 			continue
 		}
 
-
 		content, _ = utils.Decode(content)
 
 		// Get Last-Modified field
@@ -104,6 +103,11 @@ func Package(num int) {
 
 		}
 		logrus.Infoln("update packagejson", string(content))
+		// 写入文件备用
+		err = utils.StoreMetadata("packages.json", content)
+		if err != nil {
+			logrus.Infoln("store packages.json error ", err.Error())
+		}
 
 		logrus.Errorln("update composer mirrors success")
 	}
@@ -115,11 +119,12 @@ func downloadProviders(providerList interface{}, processName string) {
 
 			path := strings.Replace(provider, "%hash%", hash.(string), -1)
 
-			if redis.IsSucceed(redis.ProviderKey, path) {
-				redis.UpdateTime(redis.ProviderKey, path)
-				logrus.Traceln(processName, "file local exist:", path)
-				continue
-			}
+			//if redis.IsSucceed(redis.ProviderKey, path) {
+			//	redis.UpdateTime(redis.ProviderKey, path)
+			//	logrus.Traceln(processName, "file local exist:", path)
+
+			//continue
+			//}
 			redis.PushQueue(redis.ProviderKey, path, processName)
 		}
 

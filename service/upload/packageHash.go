@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 // PackageHash 上传
@@ -56,16 +54,10 @@ func PackageHash(processName string, path string) {
 		logrus.Errorln(processName, path, "upload error:", err.Error())
 		return
 	}
-	localFile := "./tmp/metadata/" + path
-	paths, _ := filepath.Split(localFile)
-
-	os.MkdirAll(paths, 0755)
-	//写入本地文件
-	err = ioutil.WriteFile(localFile, fileData, 0644)
+	err = utils.StoreMetadata(path, fileData)
 	if err != nil {
-		logrus.Errorln(processName, path, "write local file  error:", err.Error())
+		logrus.Infoln("store ", path, " error ", err.Error())
 	}
-
 	// 上传成功就写入redis
 	redis.UploadSuccess(redis.PackageHashFileKey, path)
 	//

@@ -1,6 +1,5 @@
 package cmd
 
-
 import (
 	"composer/service/clean"
 	"github.com/spf13/cobra"

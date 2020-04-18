@@ -3,9 +3,11 @@ package clean
 import (
 	"composer/file"
 	"composer/service/redis"
+	"composer/utils"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -15,8 +17,7 @@ func Metadata() {
 	day, _ := time.ParseDuration("-20m")
 
 	cleanTime := int(time.Now().Add(day).Unix())
-
-	fmt.Print(cleanTime)
+	_ = UpdateMetadataTime()
 	providerList := redis.GetFileList(redis.ProviderKey, 0, cleanTime)
 	if len(providerList) > 0 {
 		for _, provider := range providerList {
@@ -39,4 +40,49 @@ func Metadata() {
 func cleanFile(path string) {
 	_ = os.Remove("./tmp/metadata/" + path)
 	_ = file.MetaFile.RemoveFile(path)
+}
+
+func UpdateMetadataTime() error {
+	packages, err := utils.GetPackages()
+	fmt.Println(err)
+	if err != nil {
+		return err
+	}
+	providerHashList := packages.ProvidersList()
+	wait := sync.WaitGroup{}
+	for _, path := range providerHashList {
+		wait.Add(1)
+		path := path
+		go func() {
+			logrus.Infoln("update provider hash", path)
+			redis.UpdateTime(redis.ProviderKey, path)
+			updateProvider(path)
+			wait.Done()
+		}()
+	}
+	wait.Wait()
+	return nil
+}
+
+func updateProvider(path string) {
+	provider, err := utils.GetProviderInfo(path)
+	if err != nil {
+		return
+	}
+	for path := range provider.PackageList() {
+		logrus.Infoln("update package", path)
+		//流处理
+		redis.UpdateTime(redis.PackageHashFileKey, path)
+		//updatePackage(path)
+	}
+}
+
+func updatePackage(path string) {
+	packageInfo, err := utils.GetPackageInfo(path)
+	if err != nil {
+		return
+	}
+	for distJob := range packageInfo.GetDistPath() {
+		redis.UpdateTime(redis.Dist, distJob.Path)
+	}
 }
