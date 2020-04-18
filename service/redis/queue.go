@@ -7,11 +7,7 @@ import (
 	"time"
 )
 
-const (
-	PackageHashFileKey = "mirror:packageHashFile"
-	ProviderKey        = "mirror:providers"
-	Dist               = "mirror:dist"
-)
+
 
 func inQueue(key, content, processName string) bool {
 	key += ":queued"

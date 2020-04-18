@@ -22,17 +22,24 @@ import (
 
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
-	Use:   "clean:metadata",
+	Use:   "clean",
 	Short: "定时清理已经无用的Metadata",
 	Run: func(cmd *cobra.Command, args []string) {
-		runCleanMetadata()
+		cleanType := cmd.Flag("type").Value.String()
+		runCleanMetadata(cleanType)
 	},
 }
 
 func init() {
+	cleanCmd.PersistentFlags().String("type", "metadata", "clean type dist or metadata")
+
 	rootCmd.AddCommand(cleanCmd)
 }
 
-func runCleanMetadata() {
-	clean.Metadata()
+func runCleanMetadata(cleanType string) {
+	if cleanType == "metadata" {
+		clean.Metadata()
+	}else if cleanType == "dist"{
+		clean.Dist()
+	}
 }

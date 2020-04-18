@@ -66,3 +66,14 @@ func RemoveDownload(path string) {
 	key := Dist + ":now"
 	redisClient.HDel(key, path)
 }
+
+func SetUpdateTime(value int64) {
+	redisClient.Set(updateTimeKey, value, 0)
+}
+func GetUpdateTime() int {
+	result, err := redisClient.Get(updateTimeKey).Int()
+	if err != nil {
+		return 0
+	}
+	return result
+}
