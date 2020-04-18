@@ -5,6 +5,7 @@ import (
 	"composer/service/redis"
 	"github.com/sirupsen/logrus"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -41,11 +42,26 @@ func Dist() {
 	}
 	distList := redis.GetFileList(redis.Dist, 0, cleanTime)
 	if len(distList) > 0 {
-		for _, dist := range distList {
-			logrus.Infoln("remove dist", dist)
-			file.DistFile.RemoveFile(dist)
-			redis.RemoveFile(redis.Dist, dist)
+		wgReceivers := sync.WaitGroup{}
+		waitCh := make(chan string, 0)
+		// 多个消费者
+		for i := 0; i < 100; i++ {
+			go func() {
+				defer wgReceivers.Done()
+
+				for path := range waitCh {
+					logrus.Infoln("remove dist", path)
+					file.DistFile.RemoveFile(path)
+					redis.RemoveFile(redis.Dist, path)
+				}
+			}()
 		}
+		for _, dist := range distList {
+			wgReceivers.Add(1)
+			waitCh <- dist
+		}
+		wgReceivers.Wait()
+		close(waitCh)
 	}
 }
 
