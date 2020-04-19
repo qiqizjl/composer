@@ -53,9 +53,9 @@ func (q *qiniu) UploadFile(file string, fileData []byte) (bool, error) {
 }
 
 func (q *qiniu) UploadFileIO(file string, fileData io.Reader, fileLen int64) (bool, error) {
-	formUploader := storage.NewFormUploader(q.getConfig())
+	resumeUploader := storage.NewResumeUploader(q.getConfig())
 	result := qiniuResult{}
-	err := formUploader.Put(context.Background(), &result, q.getUploadToken(file), file, fileData, fileLen, nil)
+	err := resumeUploader.PutWithoutSize(context.Background(), &result, q.getUploadToken(file), file, fileData, nil)
 	if err != nil {
 		return false, err
 	}
@@ -103,9 +103,7 @@ func (q *qiniu) ListFile(page string, pageSize int) (chan *ListItem, error) {
 				UpdateTime: int(listItem.Item.PutTime / 10000000),
 				Remark:     listItem.Marker,
 			}
-			select {
-			case retCh <- item:
-			}
+			retCh <- item
 		}
 		close(retCh)
 	}()
