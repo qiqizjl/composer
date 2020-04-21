@@ -1,6 +1,11 @@
 package utils
 
-import "strings"
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"regexp"
+	"strings"
+)
 
 type DistJob struct {
 	Path       string `json:"path"`
@@ -62,7 +67,12 @@ func (packagistPackage *PackagistPackage) GetDistPath() chan DistJob {
 func (packagistProvide *PackagistProvide) PackageList() chan string {
 	resList := make(chan string)
 	go func() {
+		reg := regexp.MustCompile(viper.GetString("system.ignore"))
 		for packageName, m := range packagistProvide.Providers {
+			if reg.MatchString(packageName) {
+				logrus.Info(packageName," ignore update")
+				continue
+			}
 			path := "p/" + packageName + "$" + m.Sha256 + ".json"
 			select {
 			case resList <- path:

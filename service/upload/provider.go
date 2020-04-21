@@ -46,13 +46,14 @@ func Provider(processName string, path string) {
 	}
 	content, _ = utils.Decode(content)
 
-	packageList := make(map[string]interface{})
+	packageList := &utils.PackagistProvide{}
+	//packageList := make(map[string]interface{})
 	err = json.Unmarshal(content, &packageList)
 	if err != nil {
 		logrus.Errorln(processName, path, "json_decode err: ", err.Error())
 		return
 	}
-	dispatchPackages(packageList["providers"], processName)
+	dispatchPackages(packageList, processName)
 
 	_, err = file.MetaFile.UploadFile(path, content)
 	if err != nil {
@@ -67,22 +68,15 @@ func Provider(processName string, path string) {
 
 	redis.UploadSuccess(redis.ProviderKey, path)
 
-
 }
 
-func dispatchPackages(packageList interface{}, processName string) {
-	for packageName, value := range packageList.(map[string]interface{}) {
-		for _, hash := range value.(map[string]interface{}) {
-			path := "p/" + packageName + "$" + hash.(string) + ".json"
-
-			if redis.IsSucceed(redis.PackageHashFileKey, path) {
-				redis.UpdateTime(redis.PackageHashFileKey, path)
-				logrus.Traceln(processName, "file local exist:", path)
-				continue
-			}
-			redis.PushQueue(redis.PackageHashFileKey, path, processName)
+func dispatchPackages(packageList *utils.PackagistProvide, processName string) {
+	for path := range packageList.PackageList() {
+		if redis.IsSucceed(redis.PackageHashFileKey, path) {
+			redis.UpdateTime(redis.PackageHashFileKey, path)
+			logrus.Traceln(processName, "file local exist:", path)
+			continue
 		}
-
+		redis.PushQueue(redis.PackageHashFileKey, path, processName)
 	}
-
 }
