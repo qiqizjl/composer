@@ -46,6 +46,14 @@ func Provider(processName string, path string) {
 	}
 	content, _ = utils.Decode(content)
 
+	packageList := make(map[string]interface{})
+	err = json.Unmarshal(content, &packageList)
+	if err != nil {
+		logrus.Errorln(processName, path, "json_decode err: ", err.Error())
+		return
+	}
+	dispatchPackages(packageList["providers"], processName)
+
 	_, err = file.MetaFile.UploadFile(path, content)
 	if err != nil {
 		logrus.Errorln(processName, path, " upload error:", err.Error())
@@ -59,13 +67,7 @@ func Provider(processName string, path string) {
 
 	redis.UploadSuccess(redis.ProviderKey, path)
 
-	packageList := make(map[string]interface{})
-	err = json.Unmarshal(content, &packageList)
-	if err != nil {
-		logrus.Errorln(processName, path, "json_decode err: ", err.Error())
-		return
-	}
-	dispatchPackages(packageList["providers"], processName)
+
 }
 
 func dispatchPackages(packageList interface{}, processName string) {

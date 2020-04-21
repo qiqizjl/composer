@@ -6,6 +6,7 @@ import (
 	"composer/service/redis"
 	"composer/utils"
 	"github.com/sirupsen/logrus"
+	"runtime"
 )
 
 //Dist 上传静态资源
@@ -50,4 +51,6 @@ func Dist(processName string, jobData utils.DistJob) {
 	}
 	logrus.Errorln(processName, "upload success:", jobData)
 	redis.UploadSuccess(redis.Dist, jobData.Path)
+	// 人工GC
+	runtime.GC()
 }

@@ -48,7 +48,17 @@ func PackageHash(processName string, path string) {
 		return
 	}
 	fileData, _ = utils.Decode(fileData)
-	// 先上传
+
+	// 先分发
+	packageList := make(map[string]interface{})
+	err = json.Unmarshal(fileData, &packageList)
+	if err != nil {
+		logrus.Errorln(processName, path, " json decode error:", err.Error())
+		return
+	}
+	dispatchDist(packageList["packages"], processName, path)
+
+	// 后上传
 	_, err = file.MetaFile.UploadFile(path, fileData)
 	if err != nil {
 		logrus.Errorln(processName, path, "upload error:", err.Error())
@@ -60,14 +70,7 @@ func PackageHash(processName string, path string) {
 	}
 	// 上传成功就写入redis
 	redis.UploadSuccess(redis.PackageHashFileKey, path)
-	//
-	packageList := make(map[string]interface{})
-	err = json.Unmarshal(fileData, &packageList)
-	if err != nil {
-		logrus.Errorln(processName, path, " json decode error:", err.Error())
-		return
-	}
-	dispatchDist(packageList["packages"], processName, path)
+
 }
 
 // dispatchDist 调用Dist文件

@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io/ioutil"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -110,6 +111,8 @@ func Package(num int) {
 		}
 
 		logrus.Errorln("update composer mirrors success")
+		// 上传结束人工GC
+		runtime.GC()
 	}
 }
 
