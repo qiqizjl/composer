@@ -45,10 +45,10 @@ func runSpider() {
 	for i := 0; i < 30; i++ {
 		go queue.PackageHash(i)
 	}
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 20; i++ {
 		go queue.Dist(i)
 	}
 	// 启动debug服务
-	http.ListenAndServe("0.0.0.0:8080", nil)
+	_ = http.ListenAndServe("0.0.0.0:8080", nil)
 
 }

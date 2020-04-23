@@ -77,17 +77,30 @@ func queueExists(key string) int64 {
 	return num
 }
 
+func queueNumber(key string) int64 {
+	key += ":queue"
+	num, err := redisClient.LLen(key).Result()
+	if err != nil {
+		num = 0
+	}
+	return num
+}
+
 func HasTask() bool {
 	if queueExists(ProviderKey) != 0 {
+		logrus.Infoln("wait ",ProviderKey,queueNumber(ProviderKey))
 		return true
 	}
 	if queueExists(PackageHashFileKey) != 0 {
+		logrus.Infoln("wait ",PackageHashFileKey,queueNumber(PackageHashFileKey))
 		return true
 	}
 	if queueExists(Dist) != 0 {
+		logrus.Infoln("wait ",Dist,queueNumber(Dist))
 		return true
 	}
 	if utils.GetTask() != 0 {
+		logrus.Infoln("wait task",utils.GetTask())
 		return true
 	}
 

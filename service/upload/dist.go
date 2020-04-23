@@ -5,6 +5,7 @@ import (
 	"composer/service/http"
 	"composer/service/redis"
 	"composer/utils"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"runtime"
 )
@@ -13,6 +14,10 @@ import (
 func Dist(processName string, jobData utils.DistJob) {
 	utils.ChangeTaskNumber(1)
 	defer utils.ChangeTaskNumber(-1)
+	nowRunTaskKey := fmt.Sprintf("dist_%s",jobData.Path)
+	redis.AddRunTask(nowRunTaskKey)
+	defer redis.RemoveRunTask(nowRunTaskKey)
+
 	//先判断文件是否存在
 	if redis.IsSucceed(redis.Dist, jobData.Path) {
 		logrus.Println(processName, "file local exist:", jobData.Path)
@@ -26,8 +31,6 @@ func Dist(processName string, jobData utils.DistJob) {
 		return
 	}
 
-	redis.AddNowDownload(jobData.Path, jobData.ContentURL)
-	defer redis.RemoveDownload(jobData.Path)
 	// push文件
 
 	resp, err := http.DistGet(jobData.ContentURL, processName)

@@ -46,7 +46,12 @@ type PackagistPackage struct {
 func (packagistPackage *PackagistPackage) GetDistPath() chan DistJob {
 	resList := make(chan DistJob)
 	go func() {
+		reg := regexp.MustCompile(viper.GetString("system.ignore"))
 		for packageName, packageInfo := range packagistPackage.Packages {
+			if reg.MatchString(packageName) {
+				logrus.Info(packageName," ignore dist update")
+				continue
+			}
 			for _, versionInfo := range packageInfo {
 				if versionInfo.Dist.Reference == "" {
 					// 为空不循环

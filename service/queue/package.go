@@ -58,6 +58,7 @@ func Package(num int) {
 			fmt.Println(processName, "Update to date: packages.json")
 			continue
 		}
+		redis.ClearRunTask()
 		getSourceTime := time.Now()
 		packagesJsonCache = content
 

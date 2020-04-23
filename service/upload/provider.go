@@ -6,6 +6,7 @@ import (
 	"composer/service/redis"
 	"composer/utils"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 )
@@ -13,6 +14,9 @@ import (
 func Provider(processName string, path string) {
 	utils.ChangeTaskNumber(1)
 	defer utils.ChangeTaskNumber(-1)
+	nowRunTaskKey := fmt.Sprintf("provider_%s", path)
+	redis.AddRunTask(nowRunTaskKey)
+	defer redis.RemoveRunTask(nowRunTaskKey)
 	if redis.IsSucceed(redis.ProviderKey, path) {
 		logrus.Println(processName, "file local exist:", path)
 		redis.UpdateTime(redis.ProviderKey, path)
@@ -67,7 +71,7 @@ func Provider(processName string, path string) {
 	}
 
 	redis.UploadSuccess(redis.ProviderKey, path)
-
+	logrus.Infoln(processName, "upload success:", path)
 }
 
 func dispatchPackages(packageList *utils.PackagistProvide, processName string) {

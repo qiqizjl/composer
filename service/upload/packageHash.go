@@ -6,12 +6,18 @@ import (
 	"composer/service/redis"
 	"composer/utils"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 
 // PackageHash 上传
 func PackageHash(processName string, path string) {
+	utils.ChangeTaskNumber(1)
+	defer utils.ChangeTaskNumber(-1)
+	nowRunTaskKey := fmt.Sprintf("packageHash_%s",path)
+	redis.AddRunTask(nowRunTaskKey)
+	defer redis.RemoveRunTask(nowRunTaskKey)
 	//先判断文件是否存在
 	if redis.IsSucceed(redis.PackageHashFileKey, path) {
 		logrus.Println(processName, "file local exist:", path)
@@ -24,8 +30,7 @@ func PackageHash(processName string, path string) {
 	//	redis.UploadSuccess(redis.PackageHashFileKey, path)
 	//	return
 	//}
-	utils.ChangeTaskNumber(1)
-	defer utils.ChangeTaskNumber(-1)
+
 
 	//远程获取文件
 	resp, err := http.PackagistGet(path, processName)
@@ -50,13 +55,13 @@ func PackageHash(processName string, path string) {
 	fileData, _ = utils.Decode(fileData)
 
 	// 先分发
-	packageList := make(map[string]interface{})
+	packageList := utils.PackagistPackage{}
 	err = json.Unmarshal(fileData, &packageList)
 	if err != nil {
 		logrus.Errorln(processName, path, " json decode error:", err.Error())
 		return
 	}
-	dispatchDist(packageList["packages"], processName, path)
+	dispatchDist(packageList, processName, path)
 
 	// 后上传
 	_, err = file.MetaFile.UploadFile(path, fileData)
@@ -70,39 +75,20 @@ func PackageHash(processName string, path string) {
 	}
 	// 上传成功就写入redis
 	redis.UploadSuccess(redis.PackageHashFileKey, path)
+	logrus.Infoln(processName, "upload success:", path)
 
 }
 
 // dispatchDist 调用Dist文件
-func dispatchDist(packages interface{}, processName string, path string) {
-	list, ok := packages.(map[string]interface{})
-	if !ok {
-		return
-	}
-	for packageName, value := range list {
-		for version, versionContent := range value.(map[string]interface{}) {
-			dist, ok := versionContent.(map[string]interface{})["dist"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-			if dist["reference"] == nil {
-				logrus.Errorln(processName, path, version, "dist not found :", path, dist)
-				continue
-			}
-			// 同步版本
-			versionPath := packageName + "/" + dist["reference"].(string) + "." + dist["type"].(string)
-			// 先判断文件是否存在
-			if redis.IsSucceed(redis.Dist, versionPath) {
-				// 文件存在 刷新文件时间
-				redis.UpdateTime(redis.Dist, versionPath)
-				continue
-			}
-
-			distJob := utils.DistJob{}
-			distJob.Path = versionPath
-			distJob.ContentURL = dist["url"].(string)
-			jobContent, _ := json.Marshal(distJob)
-			redis.PushQueue(redis.Dist, string(jobContent), processName)
+func dispatchDist(packages utils.PackagistPackage, processName string, path string) {
+	for distJob := range packages.GetDistPath() {
+		if redis.IsSucceed(redis.Dist, distJob.Path) {
+			// 文件存在 刷新文件时间
+			redis.UpdateTime(redis.Dist, distJob.Path)
+			continue
 		}
+
+		jobContent, _ := json.Marshal(distJob)
+		redis.PushQueue(redis.Dist, string(jobContent), processName)
 	}
 }

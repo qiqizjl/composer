@@ -57,16 +57,6 @@ func RemoveFile(key string, path string) {
 	redisClient.ZRem(fileKey, path)
 }
 
-func AddNowDownload(path string, url string) {
-	key := Dist + ":now"
-	redisClient.HSet(key, path, url)
-}
-
-func RemoveDownload(path string) {
-	key := Dist + ":now"
-	redisClient.HDel(key, path)
-}
-
 func SetUpdateTime(value int64) {
 	redisClient.Set(updateTimeKey, value, 0)
 }
@@ -76,4 +66,29 @@ func GetUpdateTime() int {
 		return 0
 	}
 	return result
+}
+
+func AddRunTask(task string) {
+	key := "mirrors:task"
+	redisClient.HSet(key, task, time.Now().Unix())
+}
+
+func RemoveRunTask(task string) {
+	key := "mirrors:task"
+	redisClient.HDel(key, task)
+}
+
+func ClearRunTask() {
+	key := "mirrors:task"
+	redisClient.Del(key)
+}
+
+func AddDistSize(packageName string, size int) {
+	key := Dist + ":size"
+	redisClient.ZIncrBy(key, float64(size), packageName)
+}
+
+func ClearDistSize() {
+	key := Dist + ":size"
+	redisClient.Del(key)
 }
